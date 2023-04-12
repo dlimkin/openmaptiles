@@ -1,0 +1,26 @@
+tables:
+  dl_cities:
+    type: polygon # тип геометрии используемый для таблицы
+    mapping:
+      place: # кто есть кто можно посмотреть тут https://wiki.openstreetmap.org/wiki/RU:Key:place
+        - city                 # крупные города
+        - town                 # средний или малый город
+        - village              # посёлок городского типа
+        - hamlet               # Любой сельский населённый пункт размером от двух-трёх домашних хозяйств, не подходящий под критерии village
+        - allotments           # всякие  СНТ, ДНТ и т.п.
+        - isolated_dwelling    # хутор
+        - neighbourhood        # микрорайоны, кварталы и т.п.
+        - suburb               # пригороды
+        - locality             # заброшенные деревни, урочище
+    columns:
+      - {name: osm_id, type: id}
+      - {name: geometry, type: geometry}
+      - {name: type, type: mapping_value}
+      - {key: name, name: name, type: string}
+      - {key: "addr:country", name: country, type: string}
+      - {key: "addr:district", name: district, type: string}
+      - {key: "addr:region", name: region, type: string}
+      - {key: "addr:postcode", name: postcode, type: string}
+      - {key: population, name: population, type: string}
+      - {key: "population:date", name: population_date, type: string}
+      - {key: official_status, name: official_status, type: string}
