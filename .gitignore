@@ -13,6 +13,8 @@ data/*
 
 # generated source files
 #build/*
+/build/openmaptiles.tm2source/
+/build/style/
 
 # Import cache
 cache/*
@@ -20,3 +22,4 @@ cache/*
 # any IDE files
 .idea/
 .vscode/
+

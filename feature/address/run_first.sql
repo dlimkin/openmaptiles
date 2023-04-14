@@ -4,9 +4,9 @@
 CREATE OR REPLACE FUNCTION dl_get_city(feature geometry)
 RETURNS text AS $$
     SELECT name
-    FROM dl_cities
-    WHERE ST_Contains(geometry, ST_Centroid(ST_Transform(feature, 4326)))
-    ORDER BY population
+    FROM osm_dl_city_polygon
+    WHERE ST_Contains(geometry, feature)
+    ORDER BY population DESC
     LIMIT 1;
 $$ LANGUAGE SQL
 STRICT

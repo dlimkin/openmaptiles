@@ -7,30 +7,32 @@ fmake="make -f feature/feature.makefile"
 
 export area=${1:-default}
 
-#${fmake} feature-address
+#${fmake} feature-add-address
 #exit 0;
 
 #${fmake} refresh-docker-images
 
-${fmake} destroy-db
-
-${fmake} clean
-
-${fmake} feature-all
-
-exit 0;
+#${fmake} destroy-db
+#exit 0;
+#${fmake} clean
+#
+#${fmake} feature-all
+#
+#exit 0;
 
 
 #Water Natural Lakelines data
-${fmake} import-data
+#${fmake} import-data
 
-#${area} -> imposm3[./build/mapping.yaml] -> PostgreSQL"
-${fmake} import-osm
+#exit 0;
+
+#"${area} -> imposm3[./build/mapping.yaml] -> PostgreSQL"
+#${fmake} import-osm
 
 #Wikidata Query Service -> PostgreSQL
-${fmake} import-wikidata
+#${fmake} import-wikidata
 
-exit 0;
+#exit 0;
 
-echo "====> : Start SQL postprocessing:  ./build/sql/* -> PostgreSQL "
+#echo "====> : Start SQL postprocessing:  ./build/sql/* -> PostgreSQL "
 ${fmake} import-sql

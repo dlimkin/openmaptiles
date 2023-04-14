@@ -1,4 +1,4 @@
-  dl_cities:
+  dl_city_polygon:
     type: polygon
     mapping:
       place:
@@ -32,13 +32,13 @@
         type: string
       - key: addr:postcode
         name: postcode
-        type: string
+        type: integer
       - key: population
         name: population
-        type: string
-      - key: population:date
-        name: population_date
-        type: string
-      - key: official_status
-        name: official_status
-        type: string
+        type: integer
+#      - key: population:date
+#        name: population_date
+#        type: string
+#      - key: official_status
+#        name: official_status
+#        type: string

@@ -4,14 +4,15 @@ CREATE OR REPLACE FUNCTION slice_language_tags(tags hstore)
 RETURNS hstore AS $$
     SELECT delete_empty_keys(slice(tags, ARRAY['name:en', 'name:ru', 'name:uk','old_name:en', 'old_name:ru', 'old_name:uk', 'int_name', 'loc_name', 'name', 'old_name', 'wikidata', 'wikipedia']))
 $$ LANGUAGE SQL IMMUTABLE;
+
 -- This SQL code should be executed first FROM ADDRESS
 
 CREATE OR REPLACE FUNCTION dl_get_city(feature geometry)
 RETURNS text AS $$
     SELECT name
-    FROM dl_cities
-    WHERE ST_Contains(geometry, ST_Centroid(ST_Transform(feature, 4326)))
-    ORDER BY population
+    FROM osm_dl_city_polygon
+    WHERE ST_Contains(geometry, feature)
+    ORDER BY population DESC
     LIMIT 1;
 $$ LANGUAGE SQL
 STRICT
