@@ -1,0 +1,44 @@
+  dl_cities:
+    type: polygon
+    mapping:
+      place:
+        - city
+        - town
+        - village
+        - hamlet
+        - allotments
+        - isolated_dwelling
+        - neighbourhood
+        - suburb
+        - locality
+    columns:
+      - name: osm_id
+        type: id
+      - name: geometry
+        type: geometry
+      - name: type
+        type: mapping_value
+      - key: name
+        name: name
+        type: string
+      - key: addr:country
+        name: country
+        type: string
+      - key: addr:district
+        name: district
+        type: string
+      - key: addr:region
+        name: region
+        type: string
+      - key: addr:postcode
+        name: postcode
+        type: string
+      - key: population
+        name: population
+        type: string
+      - key: population:date
+        name: population_date
+        type: string
+      - key: official_status
+        name: official_status
+        type: string

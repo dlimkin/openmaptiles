@@ -12,7 +12,7 @@ quickstart.log
 data/*
 
 # generated source files
-build/*
+#build/*
 
 # Import cache
 cache/*
