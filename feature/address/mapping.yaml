@@ -21,24 +21,29 @@
       - key: name
         name: name
         type: string
-      - key: addr:country
-        name: country
-        type: string
-      - key: addr:district
-        name: district
-        type: string
-      - key: addr:region
-        name: region
-        type: string
-      - key: addr:postcode
-        name: postcode
-        type: integer
       - key: population
         name: population
         type: integer
-#      - key: population:date
-#        name: population_date
-#        type: string
-#      - key: official_status
-#        name: official_status
-#        type: string
+  building_associatedstreet:
+    fields:
+      - name: osm_id
+        type: id
+      - key: name
+        name: name
+        type: string
+      - name: building
+        key: building
+        type: string
+        from_member: true
+      - name: member
+        type: member_id
+      - name: index
+        type: member_index
+      - name: role
+        type: member_role
+        from_member: true
+      - name: type
+        type: member_type
+    mapping:
+      type: [ associatedStreet ]
+    type: relation_member

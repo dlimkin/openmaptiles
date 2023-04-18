@@ -12,26 +12,42 @@ $$ LANGUAGE SQL
 STRICT
 PARALLEL SAFE;
 
-CREATE OR REPLACE FUNCTION dl_make_address_tsvector(city text, street text, street_old_name text, housenumber text)
-  RETURNS tsvector
-IMMUTABLE
-LANGUAGE plpgsql
-AS $$
+CREATE OR REPLACE FUNCTION dl_get_street(osmid bigint, street text) RETURNS text AS $$
+DECLARE
+  result text;
 BEGIN
-  RETURN (to_tsvector(city) || to_tsvector(street)|| to_tsvector(street_old_name) || to_tsvector(housenumber));
-END
+  SELECT name INTO result FROM osm_building_associatedstreet WHERE member = osmid;
+  IF result IS NULL AND street <> '' THEN
+    RETURN street;
+  ELSE
+    RETURN result;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION dl_make_address_tsvector(city text, street text, housenumber text, VARIADIC other_args text[])
+  RETURNS tsvector
+  IMMUTABLE
+  LANGUAGE plpgsql
+AS $$
+DECLARE
+  res tsvector := to_tsvector(city) || to_tsvector(street) || to_tsvector(housenumber);
+BEGIN
+  FOREACH arg IN ARRAY other_args LOOP
+    res := res || to_tsvector(arg);
+  END LOOP;
+  RETURN res;
+END;
 $$;
 
-CREATE OR REPLACE FUNCTION dl_get_street_old_name(street_name text)
-RETURNS text AS $$
-DECLARE
-  old_name text;
-BEGIN
-  SELECT tags->'old_name' INTO old_name
+
+CREATE OR REPLACE FUNCTION dl_get_street_tags(street_name text)
+  RETURNS hstore
+  LANGUAGE sql
+AS $$
+  SELECT tags
   FROM osm_highway_linestring
   WHERE name ILIKE '%' || street_name || '%'
   LIMIT 1;
-
-  RETURN old_name;
-END;
-$$ LANGUAGE plpgsql;
+$$
