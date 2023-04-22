@@ -25,7 +25,7 @@ SELECT mvt, md5(mvt) AS key FROM (SELECT STRING_AGG(mvtl, '') AS mvt FROM (
     UNION ALL
   SELECT COALESCE(ST_AsMVT(t, 'water_name', 4096, 'mvtgeometry', 'osm_id'), '') as mvtl FROM (SELECT osm_id, ST_AsMVTGeom(geometry, ST_TileEnvelope(zoom, x, y), 4096, 4096, true) AS mvtgeometry, name, name_en, name_de, NULLIF(tags->'name:en', '') AS "name:en", NULLIF(tags->'name:ru', '') AS "name:ru", NULLIF(tags->'name:uk', '') AS "name:uk", NULLIF(tags->'name_int', '') AS "name_int", NULLIF(tags->'name:latin', '') AS "name:latin", NULLIF(tags->'name:nonlatin', '') AS "name:nonlatin", class, intermittent FROM layer_water_name(ST_Expand(ST_TileEnvelope(zoom, x, y), 40075016.6855785/2^zoom), zoom)) AS t
     UNION ALL
-  SELECT COALESCE(ST_AsMVT(t, 'transportation_name', 4096, 'mvtgeometry'), '') as mvtl FROM (SELECT ST_AsMVTGeom(geometry, ST_TileEnvelope(zoom, x, y), 4096, 128, true) AS mvtgeometry, name, name_en, NULLIF(tags->'old_name', '') AS "old_name", NULLIF(tags->'name:en', '') AS "name:en", NULLIF(tags->'name:ru', '') AS "name:ru", NULLIF(tags->'name:uk', '') AS "name:uk", NULLIF(tags->'name_int', '') AS "name_int", NULLIF(tags->'name:latin', '') AS "name:latin", NULLIF(tags->'name:nonlatin', '') AS "name:nonlatin", ref, ref_length, network::text, class::text, subclass, brunnel, layer, level, indoor, route_1, route_2, route_3, route_4, route_5, route_6 FROM layer_transportation_name(ST_Expand(ST_TileEnvelope(zoom, x, y), 1252344.2714243282/2^zoom), zoom)) AS t
+  SELECT COALESCE(ST_AsMVT(t, 'transportation_name', 4096, 'mvtgeometry'), '') as mvtl FROM (SELECT ST_AsMVTGeom(geometry, ST_TileEnvelope(zoom, x, y), 4096, 128, true) AS mvtgeometry, name, name_en, old_name, NULLIF(tags->'name:en', '') AS "name:en", NULLIF(tags->'name:ru', '') AS "name:ru", NULLIF(tags->'name:uk', '') AS "name:uk", NULLIF(tags->'name_int', '') AS "name_int", NULLIF(tags->'name:latin', '') AS "name:latin", NULLIF(tags->'name:nonlatin', '') AS "name:nonlatin", ref, ref_length, network::text, class::text, subclass, brunnel, layer, level, indoor, route_1, route_2, route_3, route_4, route_5, route_6 FROM layer_transportation_name(ST_Expand(ST_TileEnvelope(zoom, x, y), 1252344.2714243282/2^zoom), zoom)) AS t
     UNION ALL
   SELECT COALESCE(ST_AsMVT(t, 'place', 4096, 'mvtgeometry', 'osm_id'), '') as mvtl FROM (SELECT osm_id, ST_AsMVTGeom(geometry, ST_TileEnvelope(zoom, x, y), 4096, 4096, true) AS mvtgeometry, name, name_en, name_de, NULLIF(tags->'name:en', '') AS "name:en", NULLIF(tags->'name:ru', '') AS "name:ru", NULLIF(tags->'name:uk', '') AS "name:uk", NULLIF(tags->'name_int', '') AS "name_int", NULLIF(tags->'name:latin', '') AS "name:latin", NULLIF(tags->'name:nonlatin', '') AS "name:nonlatin", class, rank, capital, iso_a2 FROM layer_place(ST_Expand(ST_TileEnvelope(zoom, x, y), 40075016.6855785/2^zoom), zoom, 156543.03392804103/2^zoom::NUMERIC)) AS t
     UNION ALL
@@ -36,4 +36,49 @@ SELECT mvt, md5(mvt) AS key FROM (SELECT STRING_AGG(mvtl, '') AS mvt FROM (
   SELECT COALESCE(ST_AsMVT(t, 'aerodrome_label', 4096, 'mvtgeometry', 'id'), '') as mvtl FROM (SELECT id, ST_AsMVTGeom(geometry, ST_TileEnvelope(zoom, x, y), 4096, 1024, true) AS mvtgeometry, name, name_en, name_de, NULLIF(tags->'name:en', '') AS "name:en", NULLIF(tags->'name:ru', '') AS "name:ru", NULLIF(tags->'name:uk', '') AS "name:uk", NULLIF(tags->'name_int', '') AS "name_int", NULLIF(tags->'name:latin', '') AS "name:latin", NULLIF(tags->'name:nonlatin', '') AS "name:nonlatin", class, iata, icao, ele, ele_ft FROM layer_aerodrome_label(ST_Expand(ST_TileEnvelope(zoom, x, y), 10018754.171394626/2^zoom), zoom)) AS t
 ) AS all_layers) AS mvt_data
 ;
-$$ LANGUAGE SQL STABLE RETURNS NULL ON NULL INPUT;
+$$ LANGUAGE SQL STABLE RETURNS NULL ON NULL INPUT;-- This SQL code should be executed last FROM ADDRESS
+
+UPDATE osm_dl_city_polygon
+SET population = city_pop.population
+FROM osm_city_point AS city_pop
+WHERE osm_dl_city_polygon.name = city_pop.name;
+
+DROP MATERIALIZED VIEW IF EXISTS dl_address;
+CREATE MATERIALIZED VIEW dl_address AS
+SELECT osm_id, housenumber, street,
+   (tags->'name:ru') AS street_ru,
+   (tags->'old_name') AS street_old,
+   (tags->'old_name:ru') AS street_old_ru,
+    geometry,
+    dl_get_city(geometry) AS city
+FROM (
+    SELECT osm_id, housenumber, dl_get_street(osm_id,street) AS street, dl_get_street_tags(dl_get_street(osm_id,street)) AS tags, geometry
+    FROM osm_housenumber_point
+) AS subquery;
+
+
+-- CREATE INDEX dl_address_idx ON dl_address USING gin(dl_make_address_tsvector(
+-- city, street, housenumber, street_old, street_ru, street_old_ru));-- This SQL code should be executed last FROM ADDRESS
+
+UPDATE osm_dl_city_polygon
+SET population = city_pop.population
+FROM osm_city_point AS city_pop
+WHERE osm_dl_city_polygon.name = city_pop.name;
+
+DROP MATERIALIZED VIEW IF EXISTS dl_address;
+CREATE MATERIALIZED VIEW dl_address AS
+SELECT osm_id, housenumber, street,
+   (tags->'name:ru') AS street_ru,
+   (tags->'old_name') AS street_old,
+   (tags->'old_name:ru') AS street_old_ru,
+   dl_get_city(geometry) AS city,
+   st_y(WGS84) AS lat,
+   st_x(WGS84) AS lng,
+   geometry
+FROM (
+    SELECT osm_id, housenumber, geometry,
+    st_transform(centroid_geometry, 4326) AS WGS84
+    dl_get_street(osm_id,street) AS street,
+    dl_get_street_tags(dl_get_street(osm_id,street)) AS tags
+    FROM osm_housenumber_point
+) AS subquery;

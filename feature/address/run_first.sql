@@ -25,23 +25,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE FUNCTION dl_make_address_tsvector(city text, street text, housenumber text, VARIADIC other_args text[])
-  RETURNS tsvector
-  IMMUTABLE
-  LANGUAGE plpgsql
-AS $$
-DECLARE
-  res tsvector := to_tsvector(city) || to_tsvector(street) || to_tsvector(housenumber);
-BEGIN
-  FOREACH arg IN ARRAY other_args LOOP
-    res := res || to_tsvector(arg);
-  END LOOP;
-  RETURN res;
-END;
-$$;
-
-
 CREATE OR REPLACE FUNCTION dl_get_street_tags(street_name text)
   RETURNS hstore
   LANGUAGE sql

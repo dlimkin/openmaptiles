@@ -11,13 +11,14 @@ SELECT osm_id, housenumber, street,
    (tags->'name:ru') AS street_ru,
    (tags->'old_name') AS street_old,
    (tags->'old_name:ru') AS street_old_ru,
-    geometry,
-    dl_get_city(geometry) AS city
+   dl_get_city(geometry) AS city,
+   st_y(WGS84) AS lat,
+   st_x(WGS84) AS lng,
+   geometry
 FROM (
-    SELECT osm_id, housenumber, dl_get_street(osm_id,street) AS street, dl_get_street_tags(dl_get_street(osm_id,street)) AS tags, geometry
+    SELECT osm_id, housenumber, geometry,
+    st_transform(centroid_geometry, 4326) AS WGS84
+    dl_get_street(osm_id,street) AS street,
+    dl_get_street_tags(dl_get_street(osm_id,street)) AS tags
     FROM osm_housenumber_point
 ) AS subquery;
-
-
-CREATE INDEX dl_address_idx ON dl_address USING gin(dl_make_address_tsvector(
-city, street, housenumber, street_old, street_ru, street_old_ru));

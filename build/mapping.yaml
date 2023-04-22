@@ -1821,3 +1821,52 @@ tables:
         aeroway:
         - aerodrome
 
+  dl_city_polygon:
+    type: polygon
+    mapping:
+      place:
+        - city
+        - town
+        - village
+        - hamlet
+        - allotments
+        - isolated_dwelling
+        - neighbourhood
+        - suburb
+        - locality
+    columns:
+      - name: osm_id
+        type: id
+      - name: geometry
+        type: geometry
+      - name: type
+        type: mapping_value
+      - key: name
+        name: name
+        type: string
+      - key: population
+        name: population
+        type: integer
+  building_associatedstreet:
+    fields:
+      - name: osm_id
+        type: id
+      - key: name
+        name: name
+        type: string
+      - name: building
+        key: building
+        type: string
+        from_member: true
+      - name: member
+        type: member_id
+      - name: index
+        type: member_index
+      - name: role
+        type: member_role
+        from_member: true
+      - name: type
+        type: member_type
+    mapping:
+      type: [ associatedStreet ]
+    type: relation_member
