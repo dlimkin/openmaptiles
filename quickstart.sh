@@ -163,6 +163,8 @@ else
     echo " "
 fi
 
+MBTILES_FILE=${MBTILES_FILE:-$(source .env ; echo "$MBTILES_FILE")}
+
 echo " "
 echo "-------------------------------------------------------------------------------------"
 echo "====> : Stopping running services & removing old containers"
@@ -180,8 +182,8 @@ make init-dirs
 
 echo " "
 echo "-------------------------------------------------------------------------------------"
-echo "====> : Removing old MBTILES if exists ( ./data/${area}.mbtiles ) "
-rm -f "./data/${area}.mbtiles"
+echo "====> : Removing old MBTILES if exists ( ./data/$MBTILES_FILE ) "
+rm -f "./data/$MBTILES_FILE"
 
 echo " "
 echo "-------------------------------------------------------------------------------------"
@@ -292,7 +294,7 @@ fi
 echo " "
 echo "-------------------------------------------------------------------------------------"
 echo "====> : Start generating MBTiles (containing gzipped MVT PBF) using PostGIS. "
-echo "      : Output MBTiles: ./data/${area}.mbtiles  "
+echo "      : Output MBTiles: $MBTILES_FILE  "
 echo "      : Source code: https://github.com/openmaptiles/openmaptiles-tools/blob/master/bin/generate-tiles "
 make generate-tiles-pg
 
@@ -306,8 +308,7 @@ echo "--------------------------------------------------------------------------
 echo "====> : Inputs - Outputs md5sum for debugging "
 rm -f ./data/quickstart_checklist.chk
 {
-  find build -type f | sort | xargs md5sum
-  find data -type f | sort | xargs md5sum
+  find build data -type f -exec md5sum {} + | sort -k2
 } >> ./data/quickstart_checklist.chk
 cat ./data/quickstart_checklist.chk
 
@@ -326,7 +327,7 @@ docker images | grep openmaptiles
 
 echo " "
 echo "-------------------------------------------------------------------------------------"
-echo "====> : (disk space) We have created the new vectortiles ( ./data/${area}.mbtiles ) "
+echo "====> : (disk space) We have created the new vectortiles ( ./data/$MBTILES_FILE ) "
 echo "      : Please respect the licenses (OdBL for OSM data) of the sources when distributing the MBTiles file."
 echo "      : Data directory content:"
 ls -la ./data
@@ -350,8 +351,11 @@ echo " Acknowledgments "
 echo " Generated vector tiles are produced work of OpenStreetMap data. "
 echo " Such tiles are reusable under CC-BY license granted by OpenMapTiles team: "
 echo "   https://github.com/openmaptiles/openmaptiles/#license "
-echo " Maps made with these vector tiles must display a visible credit: "
+echo "-------------------------------------------------------------------------------------"
+echo " "
+echo -e "\033[1m Maps made with these vector tiles must display a visible credit:\033[0m "
 echo "   © OpenMapTiles © OpenStreetMap contributors "
 echo " "
+echo "-------------------------------------------------------------------------------------"
 echo " Thanks to all free, open source software developers and Open Data Contributors!    "
 echo "-------------------------------------------------------------------------------------"
