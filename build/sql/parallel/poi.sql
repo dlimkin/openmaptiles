@@ -51,7 +51,10 @@ CREATE OR REPLACE FUNCTION poi_class(subclass text, mapping_key text)
     RETURNS text AS
 $$
 SELECT CASE
-           WHEN "subclass" IN ('accessories', 'antiques', 'beauty', 'bed', 'boutique', 'camera', 'carpet', 'charity', 'chemist', 'coffee', 'computer', 'convenience', 'copyshop', 'cosmetics', 'garden_centre', 'doityourself', 'erotic', 'electronics', 'fabric', 'florist', 'frozen_food', 'furniture', 'video_games', 'video', 'general', 'gift', 'hardware', 'hearing_aids', 'hifi', 'ice_cream', 'interior_decoration', 'jewelry', 'kiosk', 'locksmith', 'lamps', 'mall', 'massage', 'motorcycle', 'mobile_phone', 'newsagent', 'optician', 'outdoor', 'perfumery', 'perfume', 'pet', 'photo', 'second_hand', 'shoes', 'sports', 'stationery', 'tailor', 'tattoo', 'ticket', 'tobacco', 'toys', 'travel_agency', 'watches', 'weapons', 'wholesale') THEN 'shop'
+           -- Special case subclass collision between office=university and amenity=university
+           WHEN mapping_key = 'amenity' AND subclass = 'university' THEN 'college'
+           WHEN "subclass" IN ('accessories', 'antiques', 'beauty', 'bed', 'boutique', 'camera', 'carpet', 'charity', 'chemist', 'chocolate', 'coffee', 'computer', 'convenience', 'confectionery', 'copyshop', 'cosmetics', 'garden_centre', 'doityourself', 'erotic', 'electronics', 'fabric', 'florist', 'frozen_food', 'furniture', 'video_games', 'video', 'general', 'gift', 'hardware', 'hearing_aids', 'hifi', 'interior_decoration', 'jewelry', 'kiosk', 'locksmith', 'lamps', 'mall', 'massage', 'motorcycle', 'mobile_phone', 'newsagent', 'optician', 'outdoor', 'paint', 'perfumery', 'perfume', 'pet', 'photo', 'second_hand', 'shoes', 'sports', 'stationery', 'tailor', 'tattoo', 'ticket', 'tobacco', 'toys', 'travel_agency', 'watches', 'weapons', 'wholesale') THEN 'shop'
+           WHEN "subclass" IN ('accountant', 'advertising_agency', 'architect', 'association', 'bail_bond_agent', 'charity', 'company', 'construction_company', 'consulting', 'cooperative', 'courier', 'coworking', 'diplomatic', 'educational_institution', 'employment_agency', 'energy_supplier', 'engineer', 'estate_agent', 'financial', 'financial_advisor', 'forestry', 'foundation', 'geodesist', 'government', 'graphic_design', 'guide', 'harbour_master', 'health_insurance', 'insurance', 'interior_design', 'it', 'lawyer', 'logistics', 'marketing', 'moving_company', 'newspaper', 'ngo', 'notary', 'physician', 'political_party', 'private_investigator', 'property_management', 'publisher', 'quango', 'religion', 'research', 'security', 'surveyor', 'tax_advisor', 'taxi', 'telecommunication', 'therapist', 'translator', 'travel_agent', 'tutoring', 'union', 'university', 'water_utility', 'web_design', 'wedding_planner') THEN 'office'
            WHEN "subclass" IN ('townhall', 'public_building', 'courthouse', 'community_centre') THEN 'town_hall'
            WHEN "subclass" IN ('golf', 'golf_course', 'miniature_golf') THEN 'golf'
            WHEN "subclass" IN ('fast_food', 'food_court') THEN 'fast_food'
@@ -70,7 +73,7 @@ SELECT CASE
            WHEN "subclass" IN ('books', 'library') THEN 'library'
            WHEN "subclass" IN ('university', 'college') THEN 'college'
            WHEN "subclass" IN ('hotel', 'motel', 'bed_and_breakfast', 'guest_house', 'hostel', 'chalet', 'alpine_hut', 'dormitory') THEN 'lodging'
-           WHEN "subclass" IN ('chocolate', 'confectionery') THEN 'ice_cream'
+           WHEN "subclass" = 'ice_cream' THEN 'ice_cream'
            WHEN "subclass" IN ('post_box', 'post_office', 'parcel_locker') THEN 'post'
            WHEN "subclass" = 'cafe' THEN 'cafe'
            WHEN "subclass" IN ('school', 'kindergarten') THEN 'school'
@@ -89,6 +92,7 @@ SELECT CASE
            WHEN "subclass" IN ('swimming_area', 'swimming') THEN 'swimming'
            WHEN "subclass" IN ('castle', 'ruins') THEN 'castle'
            WHEN "subclass" = 'atm' THEN 'atm'
+           WHEN "subclass" IN ('fuel', 'charging_station') THEN 'fuel'
            ELSE subclass
            END;
 $$ LANGUAGE SQL IMMUTABLE
@@ -170,6 +174,19 @@ $$
     WHERE (full_update OR osm_id IN (SELECT osm_id FROM poi_polygon.osm_ids))
       AND funicular = 'yes'
       AND subclass = 'station';
+
+    -- Parcel locker and charging_station without name 
+    -- use either brand or operator and add ref if present
+    -- (using name for parcel lockers is discouraged, see osm wiki)
+    UPDATE osm_poi_polygon
+    SET (name, tags) = (
+        TRIM(CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref'))),
+        tags || hstore('name', TRIM(CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref'))))
+    )
+    WHERE (full_update OR osm_id IN (SELECT osm_id FROM poi_polygon.osm_ids))
+      AND subclass IN ('parcel_locker', 'charging_station')
+      AND name = ''
+      AND COALESCE(tags -> 'brand', tags -> 'operator') IS NOT NULL;
 
     UPDATE osm_poi_polygon
     SET tags = update_tags(tags, geometry)
@@ -293,11 +310,11 @@ BEGIN
     -- (using name for parcel lockers is discouraged, see osm wiki)
     UPDATE osm_poi_point
     SET (name, tags) = (
-        CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref')),
-        tags || hstore('name', CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref')))
+        TRIM(CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref'))),
+        tags || hstore('name', TRIM(CONCAT(COALESCE(tags -> 'brand', tags -> 'operator'), concat(' ', tags -> 'ref'))))
     )
     WHERE (full_update OR osm_id IN (SELECT osm_id FROM poi_point.osm_ids))
-      AND subclass = 'parcel_locker'
+      AND subclass IN ('parcel_locker', 'charging_station')
       AND name = ''
       AND COALESCE(tags -> 'brand', tags -> 'operator') IS NOT NULL;
 

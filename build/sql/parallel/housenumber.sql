@@ -1,5 +1,28 @@
 DO $$ BEGIN RAISE NOTICE 'Processing layer housenumber'; END$$;
 
+-- Layer housenumber - ./housenumber_display.sql
+
+CREATE OR REPLACE FUNCTION display_housenumber_nonnumeric(raw_housenumber text)
+RETURNS text AS $$
+  -- Find the position of the semicolon in the input string
+  -- and extract the first and last value
+  SELECT substring(raw_housenumber from 1 for position(';' in raw_housenumber) - 1)
+         || '–'
+         || substring(raw_housenumber from position(';' in raw_housenumber) + 1);
+$$ LANGUAGE SQL IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION display_housenumber(raw_housenumber text)
+RETURNS text AS $$
+  SELECT CASE
+    WHEN raw_housenumber !~ ';' THEN raw_housenumber
+    WHEN raw_housenumber ~ '[^0-9;]' THEN display_housenumber_nonnumeric(raw_housenumber)
+    ELSE
+      (SELECT min(value)::text || '–' || max(value)::text
+        FROM unnest(array_remove(string_to_array(raw_housenumber, ';'), '')::bigint[]) AS value)
+  END
+$$ LANGUAGE SQL IMMUTABLE;
+
 -- Layer housenumber - ./housenumber_centroid.sql
 
 DROP TRIGGER IF EXISTS trigger_flag ON osm_housenumber_point;
@@ -123,7 +146,7 @@ SELECT
     -- etldoc: osm_housenumber_point -> layer_housenumber:z14_
     osm_id,
     geometry,
-    housenumber
+    display_housenumber(housenumber)
 FROM (
     SELECT
         osm_id,

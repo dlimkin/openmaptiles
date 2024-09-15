@@ -10,15 +10,15 @@ export area=${1:-default}
 #${fmake} feature-add-address
 #exit 0;
 
-#${fmake} refresh-docker-images
+${fmake} refresh-docker-images
 
-#${fmake} destroy-db
+${fmake} destroy-db
 #exit 0;
-#${fmake} clean
+${fmake} clean
 #
-#${fmake} feature-all
+${fmake} feature-all
 #
-#exit 0;
+exit 0;
 
 
 #Water Natural Lakelines data
@@ -27,10 +27,10 @@ export area=${1:-default}
 #exit 0;
 
 #"${area} -> imposm3[./build/mapping.yaml] -> PostgreSQL"
-#${fmake} import-osm
+${fmake} import-osm
 
 #Wikidata Query Service -> PostgreSQL
-#${fmake} import-wikidata
+${fmake} import-wikidata
 
 #exit 0;
 

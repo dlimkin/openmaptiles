@@ -114,6 +114,46 @@ generalized_tables:
     source: border_linestring
     sql_filter: ST_GeometryType(geometry) = 'ST_LineString' AND (disputed OR dispute
       OR border_status = 'disputed' OR disputed_by <> '') AND admin_level = 2
+  boundary_polygon_gen_z4:
+    source: boundary_polygon_gen_z5
+    sql_filter: area>power(19567.87924100513,2)
+    tolerance: 9783.939620502564
+  boundary_polygon_gen_z5:
+    source: boundary_polygon_gen_z6
+    sql_filter: area>power(9783.939620502564,2)
+    tolerance: 4891.969810251282
+  boundary_polygon_gen_z6:
+    source: boundary_polygon_gen_z7
+    sql_filter: area>power(4891.969810251282,2)
+    tolerance: 2445.984905125641
+  boundary_polygon_gen_z7:
+    source: boundary_polygon_gen_z8
+    sql_filter: area>power(2445.984905125641,2)
+    tolerance: 1222.9924525628205
+  boundary_polygon_gen_z8:
+    source: boundary_polygon_gen_z9
+    sql_filter: area>power(1222.9924525628205,2)
+    tolerance: 611.4962262814103
+  boundary_polygon_gen_z9:
+    source: boundary_polygon_gen_z10
+    sql_filter: area>power(611.4962262814103,2)
+    tolerance: 305.74811314070513
+  boundary_polygon_gen_z10:
+    source: boundary_polygon_gen_z11
+    sql_filter: area>power(305.74811314070513,2)
+    tolerance: 152.87405657035256
+  boundary_polygon_gen_z11:
+    source: boundary_polygon_gen_z12
+    sql_filter: area>power(152.87405657035256,2)
+    tolerance: 76.43702828517628
+  boundary_polygon_gen_z12:
+    source: boundary_polygon_gen_z13
+    sql_filter: area>power(76.43702828517628,2)
+    tolerance: 38.21851414258814
+  boundary_polygon_gen_z13:
+    source: boundary_polygon
+    sql_filter: area>power(38.21851414258814,2) AND ST_IsValid(geometry)
+    tolerance: 19.10925707129407
   aeroway_linestring_gen_z10:
     source: aeroway_linestring_gen_z11
     tolerance: 76.43702828517628
@@ -356,6 +396,7 @@ tables:
       - farm
       - farmland
       - orchard
+      - flowerbed
       - plant_nursery
       - vineyard
       - grass
@@ -548,7 +589,6 @@ tables:
       boundary:
       - national_park
       - protected_area
-      - aboriginal_lands
   border_linestring:
     type: relation_member
     filters:
@@ -616,6 +656,32 @@ tables:
       - dispute
       boundary_type:
       - maritime
+  boundary_polygon:
+    type: polygon
+    filters:
+      require:
+        type:
+        - boundary
+        boundary:
+        - aboriginal_lands
+    columns:
+    - name: osm_id
+      type: id
+    - name: geometry
+      type: validated_geometry
+    - name: name
+      key: name
+      type: string
+    - name: tags
+      type: hstore_tags
+    - name: boundary
+      key: boundary
+      type: string
+    - name: area
+      type: area
+    mapping:
+      boundary:
+      - aboriginal_lands
   aeroway_polygon:
     type: polygon
     columns:
@@ -723,34 +789,30 @@ tables:
     - name: tags
       type: hstore_tags
     - &id012
-      key: short_name
-      name: short_name
-      type: string
-    - &id013
       key: tunnel
       name: is_tunnel
       type: bool
-    - &id014
+    - &id013
       key: bridge
       name: is_bridge
       type: bool
-    - &id015
+    - &id014
       key: ramp
       name: is_ramp
       type: bool
-    - &id016
+    - &id015
       key: ford
       name: is_ford
       type: bool
-    - &id017
+    - &id019
       key: oneway
       name: is_oneway
       type: direction
-    - &id018
+    - &id016
       name: is_area
       key: area
       type: bool
-    - &id019
+    - &id017
       key: service
       name: service
       type: string
@@ -760,15 +822,15 @@ tables:
     - key: toll
       name: toll
       type: bool
-    - &id020
+    - &id018
       key: usage
       name: usage
       type: string
-    - &id021
+    - &id020
       key: public_transport
       name: public_transport
       type: string
-    - &id022
+    - &id021
       key: man_made
       name: man_made
       type: string
@@ -857,8 +919,6 @@ tables:
     - *id016
     - *id017
     - *id018
-    - *id019
-    - *id020
     mapping:
       railway:
       - rail
@@ -890,11 +950,10 @@ tables:
     - *id013
     - *id014
     - *id015
+    - *id019
     - *id016
     - *id017
     - *id018
-    - *id019
-    - *id020
     mapping:
       aerialway:
       - chair_lift
@@ -929,8 +988,6 @@ tables:
     - *id016
     - *id017
     - *id018
-    - *id019
-    - *id020
     mapping:
       route:
       - ferry
@@ -952,9 +1009,9 @@ tables:
     - name: is_area
       key: area
       type: bool
+    - *id020
     - *id021
-    - *id022
-    - *id019
+    - *id017
     mapping:
       highway:
       - path
@@ -1013,6 +1070,9 @@ tables:
       type: string
     - name: colour
       key: colour
+      type: string
+    - name: ref_colour
+      key: ref:colour
       type: string
     mapping:
       route:
@@ -1226,15 +1286,15 @@ tables:
       type: id
     - name: geometry
       type: geometry
-    - &id023
+    - &id022
       name: name
       key: name
       type: string
-    - &id024
+    - &id023
       name: name_en
       key: name:en
       type: string
-    - &id025
+    - &id024
       name: name_de
       key: name:de
       type: string
@@ -1254,10 +1314,10 @@ tables:
       type: id
     - name: geometry
       type: geometry
+    - *id022
     - *id023
     - *id024
-    - *id025
-    - &id026
+    - &id025
       name: rank
       key: rank
       type: integer
@@ -1288,12 +1348,12 @@ tables:
       type: geometry
     - name: area
       type: area
+    - *id022
     - *id023
     - *id024
-    - *id025
     - name: tags
       type: hstore_tags
-    - *id026
+    - *id025
     filters:
       require:
         name:
@@ -1308,12 +1368,12 @@ tables:
       type: id
     - name: geometry
       type: geometry
+    - *id022
     - *id023
     - *id024
-    - *id025
     - name: tags
       type: hstore_tags
-    - *id026
+    - *id025
     filters:
       require:
         name:
@@ -1328,9 +1388,9 @@ tables:
       type: id
     - name: geometry
       type: geometry
+    - *id022
     - *id023
     - *id024
-    - *id025
     - name: tags
       type: hstore_tags
     - name: place
@@ -1345,7 +1405,7 @@ tables:
     - name: ref
       key: ref
       type: string
-    - *id026
+    - *id025
     filters:
       require:
         name:
@@ -1361,9 +1421,9 @@ tables:
       type: id
     - name: geometry
       type: geometry
+    - *id022
     - *id023
     - *id024
-    - *id025
     - name: tags
       type: hstore_tags
     - name: place
@@ -1375,7 +1435,7 @@ tables:
     - key: capital
       name: capital
       type: string
-    - *id026
+    - *id025
     filters:
       require:
         name:
@@ -1419,7 +1479,7 @@ tables:
         - __any__
   poi_point:
     type: point
-    columns: &id027
+    columns: &id026
     - name: osm_id
       type: id
     - name: geometry
@@ -1480,7 +1540,7 @@ tables:
     - name: brand
       key: brand
       type: string
-    mapping: &id028
+    mapping: &id027
       aerialway:
       - station
       amenity:
@@ -1494,6 +1554,7 @@ tables:
       - biergarten
       - bus_station
       - cafe
+      - charging_station
       - cinema
       - clinic
       - college
@@ -1580,7 +1641,66 @@ tables:
       - swimming_pool
       - water_park
       office:
+      - accountant
+      - advertising_agency
+      - architect
+      - association
+      - bail_bond_agent
+      - charity
+      - company
+      - construction_company
+      - consulting
+      - cooperative
+      - courier
+      - coworking
       - diplomatic
+      - educational_institution
+      - employment_agency
+      - energy_supplier
+      - engineer
+      - estate_agent
+      - financial
+      - financial_advisor
+      - forestry
+      - foundation
+      - geodesist
+      - government
+      - graphic_design
+      - guide
+      - harbour_master
+      - health_insurance
+      - insurance
+      - interior_design
+      - it
+      - lawyer
+      - logistics
+      - marketing
+      - moving_company
+      - newspaper
+      - ngo
+      - notary
+      - physician
+      - political_party
+      - private_investigator
+      - property_management
+      - publisher
+      - quango
+      - religion
+      - research
+      - security
+      - surveyor
+      - tax_advisor
+      - taxi
+      - telecommunication
+      - therapist
+      - translator
+      - travel_agent
+      - tutoring
+      - union
+      - university
+      - water_utility
+      - web_design
+      - wedding_planner
       railway:
       - halt
       - station
@@ -1651,6 +1771,7 @@ tables:
       - newsagent
       - optician
       - outdoor
+      - paint
       - perfume
       - perfumery
       - pet
@@ -1775,8 +1896,8 @@ tables:
       - dock
   poi_polygon:
     type: polygon
-    columns: *id027
-    mapping: *id028
+    columns: *id026
+    mapping: *id027
   aerodrome_label_point:
     type: geometry
     columns:
@@ -1821,6 +1942,55 @@ tables:
         aeroway:
         - aerodrome
 
+  dl_city_polygon:
+    type: polygon
+    mapping:
+      place:
+        - city
+        - town
+        - village
+        - hamlet
+        - allotments
+        - isolated_dwelling
+        - neighbourhood
+        - suburb
+        - locality
+    columns:
+      - name: osm_id
+        type: id
+      - name: geometry
+        type: geometry
+      - name: type
+        type: mapping_value
+      - key: name
+        name: name
+        type: string
+      - key: population
+        name: population
+        type: integer
+  building_associatedstreet:
+    fields:
+      - name: osm_id
+        type: id
+      - key: name
+        name: name
+        type: string
+      - name: building
+        key: building
+        type: string
+        from_member: true
+      - name: member
+        type: member_id
+      - name: index
+        type: member_index
+      - name: role
+        type: member_role
+        from_member: true
+      - name: type
+        type: member_type
+    mapping:
+      type: [ associatedStreet ]
+    type: relation_member
   dl_city_polygon:
     type: polygon
     mapping:

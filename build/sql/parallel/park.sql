@@ -52,8 +52,8 @@ DROP TRIGGER IF EXISTS update_row ON osm_park_polygon_gen_z7;
 DROP TRIGGER IF EXISTS update_row ON osm_park_polygon_gen_z6;
 DROP TRIGGER IF EXISTS update_row ON osm_park_polygon_gen_z5;
 DROP TRIGGER IF EXISTS update_row ON osm_park_polygon_gen_z4;
-DROP TRIGGER IF EXISTS tigger_flag ON osm_park_polygon;
-DROP TRIGGER IF EXISTS tigger_refresh ON park_polygon.updates;
+DROP TRIGGER IF EXISTS trigger_flag ON osm_park_polygon;
+DROP TRIGGER IF EXISTS trigger_refresh ON park_polygon.updates;
 
 -- etldoc:  osm_park_polygon ->  osm_park_polygon
 -- etldoc:  osm_park_polygon_gen_z13 ->  osm_park_polygon_gen_z13
@@ -71,43 +71,43 @@ $$
 BEGIN
     UPDATE osm_park_polygon
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z13
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z12
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z11
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z10
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z9
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z8
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z7
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z6
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     UPDATE osm_park_polygon_gen_z5
     SET tags           = update_tags(tags, geometry),
-        geometry_point = st_centroid(geometry);
+        geometry_point = ST_PointOnSurface(geometry);
 
     REFRESH MATERIALIZED VIEW CONCURRENTLY osm_park_polygon_dissolve_z4;
 END;
@@ -169,7 +169,7 @@ AS
 $$
 BEGIN
     NEW.tags = update_tags(NEW.tags, NEW.geometry);
-    NEW.geometry_point = st_centroid(NEW.geometry);
+    NEW.geometry_point = ST_PointOnSurface(NEW.geometry);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -252,7 +252,7 @@ EXECUTE PROCEDURE update_osm_park_dissolved_polygon_row();
 
 CREATE TRIGGER trigger_flag
     AFTER INSERT OR UPDATE OR DELETE
-    ON osm_park_polygon_gen_z4
+    ON osm_park_polygon
     FOR EACH STATEMENT
 EXECUTE PROCEDURE park_polygon.flag();
 
@@ -293,12 +293,11 @@ SELECT osm_id,
 FROM (
          SELECT osm_id,
                 geometry,
-                CASE WHEN boundary='aboriginal_lands' THEN 'aboriginal_lands'
-                     ELSE COALESCE(
-                          LOWER(REPLACE(NULLIF(protection_title, ''), ' ', '_')),
-                          NULLIF(boundary, ''),
-                          NULLIF(leisure, '')
-                    ) END AS class,
+                COALESCE(
+                    LOWER(REPLACE(NULLIF(protection_title, ''), ' ', '_')),
+                    NULLIF(boundary, ''),
+                    NULLIF(leisure, ''))
+                AS class,
                 name,
                 name_en,
                 name_de,
@@ -313,7 +312,7 @@ FROM (
                          NULL AS name_de,
                          NULL AS tags,
                          NULL AS leisure,
-                         CASE WHEN boundary='aboriginal_lands' THEN boundary END AS boundary,
+                         NULL AS boundary,
                          NULL AS protection_title
                   FROM osm_park_polygon_dissolve_z4
                   WHERE zoom_level = 4

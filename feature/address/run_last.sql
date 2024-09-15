@@ -12,13 +12,13 @@ SELECT osm_id, housenumber, street,
    (tags->'old_name') AS street_old,
    (tags->'old_name:ru') AS street_old_ru,
    dl_get_city(geometry) AS city,
-   st_y(WGS84) AS lat,
-   st_x(WGS84) AS lng,
+   st_y(st_transform(st_centroid(geometry), 4326)) AS lat,
+   st_x(st_transform(st_centroid(geometry), 4326)) AS lng,
    geometry
 FROM (
-    SELECT osm_id, housenumber, geometry,
-    st_transform(centroid_geometry, 4326) AS WGS84
-    dl_get_street(osm_id,street) AS street,
-    dl_get_street_tags(dl_get_street(osm_id,street)) AS tags
+    SELECT osm_id, housenumber,
+           dl_get_street(osm_id,street) AS street,
+           dl_get_street_tags(dl_get_street(osm_id,street)) AS tags,
+           geometry
     FROM osm_housenumber_point
 ) AS subquery;
